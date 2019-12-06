@@ -42,7 +42,7 @@ pub mod embedding;
 #[macro_export]
 macro_rules! element {
     ($gui:expr, $id:expr, $t:ty) => {
-        $gui.element_by_id($id).as_any().downcast_mut::<$t>()
+        $gui.element_by_id($id).unwrap().as_any().downcast_mut::<$t>()
     }
 }
 
