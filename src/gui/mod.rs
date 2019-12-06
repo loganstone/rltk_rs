@@ -1,36 +1,68 @@
 use crate::{RGB, Rltk, console::Console, Rect};
+use std::collections::HashMap;
+use std::any::Any;
+
+pub enum Event {
+
+}
 
 pub struct UI {
-    pub base_element : Box<dyn Element>
+    pub base_element : String,
+    elements : HashMap<String, Box<dyn Element>>
 }
 
 impl UI {
     pub fn new(base_element : Box<dyn Element>) -> UI {
-        UI {
-            base_element
+        let id = base_element.get_id().to_string();
+        let mut ui = UI {
+            base_element : id.clone(),
+            elements : HashMap::new()
+        };
+        ui.elements.insert(id, base_element);
+        ui
+    }
+
+    pub fn add(&mut self, parent: &str, element : Box<dyn Element>) {
+        let id = element.get_id().to_string();
+        self.elements.insert(id.clone(), element);
+        if let Some(p) = self.elements.get_mut(parent) {
+            p.add_child(&id);
         }
     }
 
-    pub fn render(&self, ctx : &mut Rltk) {
+    pub fn render(&self, ctx : &mut Rltk) -> Vec<Event> {
         let size = ctx.get_char_size();
         let b = Rect::new(0, 0, size.0 as i32, size.1 as i32);
-        self.base_element.render(ctx, b);
-        self.base_element.render_children(ctx, b);
+        self.render_element(ctx, &self.base_element, b);
+        Vec::new()
+    }
+
+    fn render_element(&self, ctx : &mut Rltk, id : &str, parent : Rect) {
+        if let Some(e) = self.elements.get(id) {
+            e.render(ctx, parent);
+
+            let b = e.get_bounds();
+            for child in e.get_children().iter() {
+                self.render_element(ctx, child, b);
+            }
+        } else {
+            println!("Unknown GUI element: {}", id);
+        }
+    }
+
+    #[allow(clippy::borrowed_box)]
+    pub fn element_by_id(&mut self, id : &str) -> Option<&mut Box<dyn Element>> {
+        self.elements.get_mut(id)
     }
 }
 
 pub trait Element {
     fn render(&self, ctx : &mut Rltk, parent : Rect);
     fn get_bounds(&self) -> Rect;
-    fn get_children(&self) -> &[Box<dyn Element>];
-    fn render_children(&self, ctx : &mut Rltk, _parent : Rect) {
-        let b = self.get_bounds();
-        self.get_children().iter().for_each(|e| {            
-            e.render(ctx, b);
-            e.render_children(ctx, b);
-        });
-    }
-    fn add_child(&mut self, element : Box<dyn Element>);
+    fn get_children(&self) -> &[String];
+    fn get_id(&self) -> &str;
+    fn add_child(&mut self, id : &str);
+    fn as_any(&mut self) -> &mut dyn Any;
 }
 
 pub struct Background {
@@ -38,24 +70,26 @@ pub struct Background {
     pub fg : RGB,
     pub bg : RGB,
     bounds : Rect,
-    children : Vec<Box<dyn Element>>
+    children: Vec<String>,
+    id : String
 }
 
 impl Background {
-    pub fn default(ctx : &mut Rltk) -> Box<Background> {
+    pub fn default(ctx : &mut Rltk, id : &str) -> Box<Background> {
         let size = ctx.get_char_size();
         Box::new(Background {
             glyph : crate::to_cp437('▒'),
             fg : RGB::named(crate::LIGHT_BLUE),
             bg : RGB::named(crate::DARK_BLUE),
             bounds : Rect::new(0, 0, size.0 as i32, size.1 as i32),
-            children : Vec::new()
+            children : Vec::new(),
+            id : id.to_string()
         })
     }
 }
 
 impl Element for Background {
-    fn render(&self, ctx : &mut Rltk, parent : Rect) {
+    fn render(&self, ctx : &mut Rltk, _parent : Rect) {
         for y in self.bounds.y1 .. self.bounds.y2 {
             for x in self.bounds.x1 .. self.bounds.x2 {
                 ctx.set(x, y, self.fg, self.bg, self.glyph);
@@ -67,12 +101,20 @@ impl Element for Background {
         self.bounds
     }
 
-    fn get_children(&self) -> &[Box<dyn Element>] {
+    fn get_children(&self) -> &[String] {
         &self.children
     }
 
-    fn add_child(&mut self, element : Box<dyn Element>) {
-        self.children.push(element);
+    fn get_id(&self) -> &str {
+        &self.id
+    }
+
+    fn add_child(&mut self, id : &str) {
+        self.children.push(id.to_string());
+    }
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -81,18 +123,20 @@ pub struct StatusBar {
     pub fg : RGB,
     pub bg : RGB,
     bounds : Rect,
-    children : Vec<Box<dyn Element>>
+    children: Vec<String>,
+    id : String
 }
 
 impl StatusBar {
-    pub fn default(ctx : &mut Rltk) -> Box<Background> {
+    pub fn default(ctx : &mut Rltk, id : &str) -> Box<StatusBar> {
         let size = ctx.get_char_size();
-        Box::new(Background {
+        Box::new(StatusBar {
             glyph : crate::to_cp437('█'),
             fg : RGB::named(crate::LIGHT_GRAY),
             bg : RGB::named(crate::BLACK),
             bounds : Rect::new(0, size.1 as i32 - 1, size.0 as i32, 1),
-            children : Vec::new()
+            children : Vec::new(),
+            id : id.to_string()
         })
     }
 }
@@ -110,12 +154,20 @@ impl Element for StatusBar {
         self.bounds
     }    
 
-    fn get_children(&self) -> &[Box<dyn Element>] {
+    fn get_children(&self) -> &[String] {
         &self.children
     }
 
-    fn add_child(&mut self, element : Box<dyn Element>) {
-        self.children.push(element);
+    fn get_id(&self) -> &str {
+        &self.id
+    }
+
+    fn add_child(&mut self, id : &str) {
+        self.children.push(id.to_string());
+    }
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -124,18 +176,20 @@ pub struct MenuBar {
     pub fg : RGB,
     pub bg : RGB,
     bounds : Rect,
-    children : Vec<Box<dyn Element>>
+    children: Vec<String>,
+    id : String
 }
 
 impl MenuBar {
-    pub fn default(ctx : &mut Rltk) -> Box<MenuBar> {
+    pub fn default(ctx : &mut Rltk, id : &str) -> Box<MenuBar> {
         let size = ctx.get_char_size();
         Box::new(MenuBar {
             glyph : crate::to_cp437('█'),
             fg : RGB::named(crate::LIGHT_GRAY),
             bg : RGB::named(crate::BLACK),
             bounds : Rect::new(0, 0, size.0 as i32, 1),
-            children : Vec::new()
+            children : Vec::new(),
+            id : id.to_string()
         })
     }
 }
@@ -153,12 +207,20 @@ impl Element for MenuBar {
         self.bounds
     }
 
-    fn get_children(&self) -> &[Box<dyn Element>] {
+    fn get_children(&self) -> &[String] {
         &self.children
     }
 
-    fn add_child(&mut self, element : Box<dyn Element>) {
-        self.children.push(element);
+    fn get_id(&self) -> &str {
+        &self.id
+    }
+
+    fn add_child(&mut self, id : &str) {
+        self.children.push(id.to_string());
+    }
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -167,17 +229,19 @@ pub struct PlainText {
     pub fg : RGB,
     pub bg : RGB,
     bounds : Rect,
-    children : Vec<Box<dyn Element>>
+    children: Vec<String>,
+    id : String
 }
 
 impl PlainText {
-    pub fn default(_ctx : &mut Rltk, text : &str, x : i32, y : i32, fg : RGB, bg : RGB) -> Box<PlainText> {
+    pub fn default(_ctx : &mut Rltk, id : &str, text : &str, x : i32, y : i32, fg : RGB, bg : RGB) -> Box<PlainText> {
         Box::new(PlainText {
             text : text.to_string(),
             fg,
             bg,
             bounds : Rect::new(x, y, text.len() as i32, 1),
-            children : Vec::new()
+            children : Vec::new(),
+            id : id.to_string()
         })
     }
 }
@@ -191,12 +255,20 @@ impl Element for PlainText {
         self.bounds
     }
 
-    fn get_children(&self) -> &[Box<dyn Element>] {
+    fn get_children(&self) -> &[String] {
         &self.children
     }
 
-    fn add_child(&mut self, element : Box<dyn Element>) {
-        self.children.push(element);
+    fn get_id(&self) -> &str {
+        &self.id
+    }
+
+    fn add_child(&mut self, id : &str) {
+        self.children.push(id.to_string());
+    }
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -205,17 +277,19 @@ pub struct Window {
     pub bg : RGB,
     bounds : Rect,
     title : String,
-    children : Vec<Box<dyn Element>>
+    children: Vec<String>,
+    id : String
 }
 
 impl Window {
-    pub fn new(_ctx : &mut Rltk, x : i32, y : i32, w: i32, h: i32, title : &str) -> Box<Window> {
+    pub fn new(_ctx : &mut Rltk, id : &str, x : i32, y : i32, w: i32, h: i32, title : &str) -> Box<Window> {
         Box::new(Window {
             fg : RGB::named(crate::NAVY),
             bg : RGB::named(crate::LIGHT_GRAY),
             bounds : Rect::new(x, y, w, h),
             children : Vec::new(),
-            title : title.to_string()
+            title : title.to_string(),
+            id : id.to_string()
         })
     }
 }
@@ -241,11 +315,19 @@ impl Element for Window {
         )
     }
 
-    fn get_children(&self) -> &[Box<dyn Element>] {
+    fn get_children(&self) -> &[String] {
         &self.children
     }
 
-    fn add_child(&mut self, element : Box<dyn Element>) {
-        self.children.push(element);
+    fn get_id(&self) -> &str {
+        &self.id
+    }
+
+    fn add_child(&mut self, id : &str) {
+        self.children.push(id.to_string());
+    }
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
     }
 }
