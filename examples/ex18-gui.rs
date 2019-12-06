@@ -2,6 +2,7 @@ rltk::add_wasm_support!();
 
 use rltk::{Console, GameState, Rltk, RGB};
 use rltk::gui::*;
+use rltk::element!;
 
 struct State {
     gui : Option<UI>
@@ -12,8 +13,7 @@ impl GameState for State {
         if let Some(gui) = &mut self.gui {
             ctx.cls();
 
-            let fps = gui.element_by_id("fps").unwrap();
-            if let Some(fps) = fps.as_any().downcast_mut::<PlainText>() {
+            if let Some(fps) = element!(fps, "fps", PlainText) {
                 fps.text = format!("FPS: {}", ctx.fps);
             }
 

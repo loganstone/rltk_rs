@@ -37,6 +37,13 @@ pub use self::textblock::{TextBlock, TextBuilder};
 pub mod embedding;
 
 #[macro_export]
+macro_rules! element {
+    ($gui:expr, $id:expr, $t:ty) => {
+        $gui.element_by_id($id).unwrap().as_any().downcast_mut::<$t>()
+    }
+}
+
+#[macro_export]
 macro_rules! add_wasm_support {
     () => {
         //#[cfg(target_arch = "wasm32")]
