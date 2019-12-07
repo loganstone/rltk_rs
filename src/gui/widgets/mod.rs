@@ -1,4 +1,4 @@
-use super::{Element, Event, EventType};
+use super::{Element, Event, EventType, Theme};
 mod background;
 pub use background::Background;
 mod statusbar;

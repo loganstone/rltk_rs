@@ -31,7 +31,6 @@ impl GameState for State {
                     EventType::Clicked => {
                         ctx.quit();
                     }
-                    _ => {}
                 }
             }
         } else {
@@ -42,16 +41,19 @@ impl GameState for State {
 
 impl State {
     fn build_gui(&self, ctx : &mut Rltk) -> UI {
-        let mut ui = UI::new(Background::default(ctx, "bg"));
-            ui.add("bg", MenuBar::default(ctx, "menubar"));
-            ui.add("bg", StatusBar::default(ctx, "statusbar"));
-            ui.add("statusbar", MouseOverText::default(ctx, "quit", "Exit", "Alt-X", 1, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));
-            ui.add("statusbar", PlainText::default(ctx, "fps", &format!("FPS: {}", ctx.fps), 16, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));
-            ui.add("menubar", PlainText::default(ctx, "F", "F", 1, 0, RGB::named(rltk::RED), RGB::named(rltk::LIGHT_GRAY)));
-            ui.add("menubar", PlainText::default(ctx, "file", "ile", 2, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));
-            ui.add("bg", Window::new(ctx, "win", 10, 10, 50, 30, "This is a window"));
-            ui.add("win", PlainText::default(ctx, "body", "Body text", 0, 0, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)));
-            ui
+        let theme = Theme::turbo_vision();
+        let mut ui = UI::new(theme);
+        ui.add(ctx, "bg", "", WidgetType::Background)
+            .set_base("bg")
+            .add(ctx, "menubar", "bg", WidgetType::MenuBar)
+            .add(ctx, "statusbar", "bg", WidgetType::StatusBar)
+            .add_explicit("statusbar", MouseOverText::default(ctx, "quit", "Exit", "Alt-X", 1, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)))
+            .add_explicit("statusbar", PlainText::default(ctx, "fps", &format!("FPS: {}", ctx.fps), 16, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)))
+            .add_explicit("menubar", PlainText::default(ctx, "F", "F", 1, 0, RGB::named(rltk::RED), RGB::named(rltk::LIGHT_GRAY)))
+            .add_explicit("menubar", PlainText::default(ctx, "file", "ile", 2, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)))
+            .add_explicit("bg", Window::new(ctx, "win", 10, 10, 50, 30, "This is a window"))
+            .add_explicit("win", PlainText::default(ctx, "body", "Body text", 0, 0, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)));
+        ui
     }
 }
 
