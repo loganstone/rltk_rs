@@ -1,29 +1,43 @@
 use crate::{Rltk, console::Console, Rect};
 use std::collections::HashMap;
-use super::{Element, Event};
+use super::*;
 
 pub struct UI {
     pub base_element : String,
+    pub theme : Theme,
     elements : HashMap<String, Box<dyn Element>>
 }
 
 impl UI {
-    pub fn new(base_element : Box<dyn Element>) -> UI {
-        let id = base_element.get_id().to_string();
-        let mut ui = UI {
-            base_element : id.clone(),
-            elements : HashMap::new()
-        };
-        ui.elements.insert(id, base_element);
-        ui
+    pub fn new(theme : Theme) -> UI {
+        UI {
+            base_element : "".to_string(),
+            elements : HashMap::new(),
+            theme
+        }
     }
 
-    pub fn add(&mut self, parent: &str, element : Box<dyn Element>) {
+    pub fn set_base(&mut self, id : &str) -> &mut UI {
+        self.base_element = id.to_string();
+        self
+    }
+
+    pub fn add(&mut self, ctx: &mut Rltk, id : &str, parent : &str, widget : WidgetType) -> &mut UI {
+        match widget {
+            WidgetType::Background => self.add_explicit(parent, Background::default(ctx, id, self.theme)),
+            WidgetType::MenuBar => self.add_explicit(parent, MenuBar::default(ctx, id, self.theme)),
+            WidgetType::StatusBar => self.add_explicit(parent, StatusBar::default(ctx, id, self.theme))
+        };
+        self
+    }
+
+    pub fn add_explicit(&mut self, parent: &str, element : Box<dyn Element>) -> &mut UI {
         let id = element.get_id().to_string();
         self.elements.insert(id.clone(), element);
         if let Some(p) = self.elements.get_mut(parent) {
-            p.add_child(&id);
+            p.add_child(&id);            
         }
+        self
     }
 
     pub fn render(&self, ctx : &mut Rltk) -> Vec<Event> {
@@ -51,4 +65,10 @@ impl UI {
     pub fn element_by_id(&mut self, id : &str) -> Option<&mut Box<dyn Element>> {
         self.elements.get_mut(id)
     }
+}
+
+pub enum WidgetType {
+    Background,
+    MenuBar,
+    StatusBar
 }

@@ -6,4 +6,6 @@ pub use widgets::*;
 mod event;
 pub use event::{Event, EventType};
 mod ui;
-pub use ui::UI;
+pub use ui::{UI, WidgetType};
+mod theme;
+pub use theme::{Theme, GlyphColor};
