@@ -1,5 +1,5 @@
 use crate::{RGB, Rltk, Rect, to_cp437, Console};
-use super::{Element, Event};
+use super::{Element, Event, Theme};
 use std::any::Any;
 
 pub struct Background {
@@ -12,12 +12,12 @@ pub struct Background {
 }
 
 impl Background {
-    pub fn default(ctx : &mut Rltk, id : &str) -> Box<Background> {
+    pub fn default(ctx : &mut Rltk, id : &str, theme : Theme) -> Box<Background> {
         let size = ctx.get_char_size();
         Box::new(Background {
-            glyph : to_cp437('▒'),
-            fg : RGB::named(crate::LIGHT_BLUE),
-            bg : RGB::named(crate::DARK_BLUE),
+            glyph : theme.background.glyph,
+            fg : theme.background.fg,
+            bg : theme.background.bg,
             bounds : Rect::new(0, 0, size.0 as i32, size.1 as i32),
             children : Vec::new(),
             id : id.to_string()
