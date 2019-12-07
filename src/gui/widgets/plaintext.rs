@@ -1,5 +1,5 @@
 use crate::{RGB, Rltk, Rect, Console};
-use super::Element;
+use super::{Element, Event};
 use std::any::Any;
 
 pub struct PlainText {
@@ -25,7 +25,7 @@ impl PlainText {
 }
 
 impl Element for PlainText {
-    fn render(&self, ctx : &mut Rltk, parent : Rect) {
+    fn render(&self, ctx : &mut Rltk, parent : Rect, events : &mut Vec<Event>) {
         ctx.print_color(self.bounds.x1 + parent.x1, self.bounds.y1 + parent.y1, self.fg, self.bg, &self.text);
     }
 

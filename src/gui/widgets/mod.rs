@@ -1,4 +1,4 @@
-use super::Element;
+use super::{Element, Event, EventType};
 mod background;
 pub use background::Background;
 mod statusbar;
@@ -9,3 +9,5 @@ mod plaintext;
 pub use plaintext::PlainText;
 mod window;
 pub use window::Window;
+mod mouse_over_text;
+pub use mouse_over_text::MouseOverText;
