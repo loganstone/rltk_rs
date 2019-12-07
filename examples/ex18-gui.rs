@@ -15,9 +15,25 @@ impl GameState for State {
 
             if let Some(fps) = element!(gui, "fps", PlainText) {
                 fps.text = format!("FPS: {}", ctx.fps);
-            }
+            }            
 
-            gui.render(ctx);
+            let events = gui.render(ctx);
+            if let Some(body) = element!(gui, "body", PlainText) {
+                body.text = "Body text goes here. One day, it will be pretty.".to_string();
+            }
+            for e in events.iter().filter(|e| e.widget == "quit") {
+                match e.event_type {
+                    EventType::MouseOver => {
+                        if let Some(body) = element!(gui, "body", PlainText) {
+                            body.text = "Hovering over the exit".to_string();
+                        }
+                    }
+                    EventType::Clicked => {
+                        ctx.quit();
+                    }
+                    _ => {}
+                }
+            }
         } else {
             self.gui = Some(self.build_gui(ctx));
         }
@@ -29,8 +45,7 @@ impl State {
         let mut ui = UI::new(Background::default(ctx, "bg"));
             ui.add("bg", MenuBar::default(ctx, "menubar"));
             ui.add("bg", StatusBar::default(ctx, "statusbar"));
-            ui.add("statusbar", PlainText::default(ctx, "altx", "Alt-X", 1, 0, RGB::named(rltk::RED), RGB::named(rltk::LIGHT_GRAY)));
-            ui.add("statusbar", PlainText::default(ctx, "exit", "Exit | ", 7, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));
+            ui.add("statusbar", MouseOverText::default(ctx, "quit", "Exit", "Alt-X", 1, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));
             ui.add("statusbar", PlainText::default(ctx, "fps", &format!("FPS: {}", ctx.fps), 16, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));
             ui.add("menubar", PlainText::default(ctx, "F", "F", 1, 0, RGB::named(rltk::RED), RGB::named(rltk::LIGHT_GRAY)));
             ui.add("menubar", PlainText::default(ctx, "file", "ile", 2, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)));

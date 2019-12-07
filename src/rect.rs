@@ -25,6 +25,14 @@ impl Rect {
     pub fn center(&self) -> (i32, i32) {
         ((self.x1 + self.x2)/2, (self.y1 + self.y2)/2)
     }
+
+    pub fn point_in_rect(&self, point : crate::Point) -> bool  {
+        point.x >= self.x1 && point.x <= self.x2 && point.y >= self.y1 && point.y <= self.y2
+    }
+
+    pub fn xy_in_rect(&self, point : (i32,i32)) -> bool  {
+        point.0 >= self.x1 && point.0 <= self.x2 && point.1 >= self.y1 && point.1 <= self.y2
+    }
 }
 
 impl ops::Add<Rect> for Rect {
