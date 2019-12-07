@@ -1,5 +1,5 @@
 use crate::{RGB, Rltk, Rect, Console};
-use super::Element;
+use super::{Element, Event};
 use std::any::Any;
 
 pub struct StatusBar {
@@ -26,7 +26,7 @@ impl StatusBar {
 }
 
 impl Element for StatusBar {
-    fn render(&self, ctx : &mut Rltk, _parent : Rect) {
+    fn render(&self, ctx : &mut Rltk, _parent : Rect, events : &mut Vec<Event>) {
         for y in self.bounds.y1 .. self.bounds.y2 {
             for x in self.bounds.x1 .. self.bounds.x2 {
                 ctx.set(x, y, self.fg, self.bg, self.glyph);
