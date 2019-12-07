@@ -1,5 +1,5 @@
 use crate::{RGB, Rltk, Rect, Console};
-use super::Element;
+use super::{Element, Event};
 use std::any::Any;
 
 pub struct Window {
@@ -25,7 +25,7 @@ impl Window {
 }
 
 impl Element for Window {
-    fn render(&self, ctx : &mut Rltk, parent : Rect) {
+    fn render(&self, ctx : &mut Rltk, parent : Rect, events : &mut Vec<Event>) {
         let x1 = self.bounds.x1 + parent.x1;
         let y1 = self.bounds.y1 + parent.y1;
         ctx.draw_box_double(x1, y1, self.bounds.x2 - self.bounds.x1, self.bounds.y2 - self.bounds.y1, self.fg, self.bg);

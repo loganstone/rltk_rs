@@ -29,17 +29,18 @@ impl UI {
     pub fn render(&self, ctx : &mut Rltk) -> Vec<Event> {
         let size = ctx.get_char_size();
         let b = Rect::new(0, 0, size.0 as i32, size.1 as i32);
-        self.render_element(ctx, &self.base_element, b);
-        Vec::new()
+        let mut events : Vec<Event> = Vec::new();
+        self.render_element(ctx, &self.base_element, b, &mut events);
+        events
     }
 
-    fn render_element(&self, ctx : &mut Rltk, id : &str, parent : Rect) {
+    fn render_element(&self, ctx : &mut Rltk, id : &str, parent : Rect, events : &mut Vec<Event>) {
         if let Some(e) = self.elements.get(id) {
-            e.render(ctx, parent);
+            e.render(ctx, parent, events);
 
             let b = e.get_bounds();
             for child in e.get_children().iter() {
-                self.render_element(ctx, child, b);
+                self.render_element(ctx, child, b, events);
             }
         } else {
             println!("Unknown GUI element: {}", id);
