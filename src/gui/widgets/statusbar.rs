@@ -1,5 +1,5 @@
 use crate::{RGB, Rltk, Rect, Console};
-use super::{Element, Event};
+use super::{Element, Event, Theme};
 use std::any::Any;
 
 pub struct StatusBar {
@@ -12,12 +12,12 @@ pub struct StatusBar {
 }
 
 impl StatusBar {
-    pub fn default(ctx : &mut Rltk, id : &str) -> Box<StatusBar> {
+    pub fn default(ctx : &mut Rltk, id : &str, theme : Theme) -> Box<StatusBar> {
         let size = ctx.get_char_size();
         Box::new(StatusBar {
-            glyph : crate::to_cp437('█'),
-            fg : RGB::named(crate::LIGHT_GRAY),
-            bg : RGB::named(crate::BLACK),
+            glyph : theme.statusbar.glyph,
+            fg : theme.statusbar.fg,
+            bg : theme.statusbar.bg,
             bounds : Rect::new(0, size.1 as i32 - 1, size.0 as i32, 1),
             children : Vec::new(),
             id : id.to_string()
