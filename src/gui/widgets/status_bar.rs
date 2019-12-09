@@ -1,4 +1,4 @@
-use super::{ElementInfo, RGB, Rltk, Element, Placement, Rect, Console, TextUI};
+use super::{ElementInfo, RGB, Rltk, Element, Placement, Rect, Console, ElementStore, Theme};
 use std::any::Any;
 
 pub struct StatusBar {
@@ -9,7 +9,7 @@ pub struct StatusBar {
 }
 
 impl StatusBar {
-    pub fn new(ctx : &mut Rltk, tui : &TextUI, parent : Option<usize>) -> Box<StatusBar> {
+    pub fn new(ctx : &mut Rltk, tui : &ElementStore, theme: &Theme, parent : Option<usize>) -> Box<StatusBar> {
         if let Some(parent_id) = parent {
             let parent_bounds = tui.get_bounds(parent_id);
             Box::new(StatusBar{
@@ -19,9 +19,9 @@ impl StatusBar {
                     parent,
                     children : Vec::new()
                 },
-                glyph : tui.theme.status_bar_background.glyph,
-                fg : tui.theme.status_bar_background.fg, 
-                bg : tui.theme.status_bar_background.bg
+                glyph : theme.status_bar_background.glyph,
+                fg : theme.status_bar_background.fg, 
+                bg : theme.status_bar_background.bg
             })
         } else {
             let screen_bounds = ctx.get_char_size();
@@ -32,9 +32,9 @@ impl StatusBar {
                     parent,
                     children : Vec::new()
                 },
-                glyph : tui.theme.status_bar_background.glyph,
-                fg : tui.theme.status_bar_background.fg, 
-                bg : tui.theme.status_bar_background.bg
+                glyph : theme.status_bar_background.glyph,
+                fg : theme.status_bar_background.fg, 
+                bg : theme.status_bar_background.bg
             })
         }
     }
@@ -49,7 +49,7 @@ impl Element for StatusBar {
         });
     }
     fn add_child(&mut self, id : usize) { self.info.children.push(id); }
-    fn get_child_widths(&self, ui : &TextUI) -> i32 {
+    fn get_child_widths(&self, ui : &ElementStore) -> i32 {
         let mut width : i32 = 0;
         for child in self.info.children.iter() {
             width += ui.get_bounds(*child).width();
