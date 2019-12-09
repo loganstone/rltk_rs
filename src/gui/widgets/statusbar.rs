@@ -1,5 +1,5 @@
 use crate::{RGB, Rltk, Rect, Console};
-use super::{Element, Event, Theme};
+use super::{Element, Event, Theme, UI};
 use std::any::Any;
 
 pub struct StatusBar {
@@ -26,7 +26,7 @@ impl StatusBar {
 }
 
 impl Element for StatusBar {
-    fn render(&self, ctx : &mut Rltk, _parent : Rect, events : &mut Vec<Event>) {
+    fn render(&self, ctx : &mut Rltk, _parent : Rect, _events : &mut Vec<Event>) {
         for y in self.bounds.y1 .. self.bounds.y2 {
             for x in self.bounds.x1 .. self.bounds.x2 {
                 ctx.set(x, y, self.fg, self.bg, self.glyph);
@@ -34,9 +34,15 @@ impl Element for StatusBar {
         }
     }
 
+    fn should_reflow(&self) -> bool { true }
+
     fn get_bounds(&self) -> Rect {
         self.bounds
-    }    
+    }
+
+    fn set_bounds(&mut self, new_bounds : Rect) {
+        self.bounds = new_bounds;
+    }
 
     fn get_children(&self) -> &[String] {
         &self.children

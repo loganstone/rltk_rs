@@ -43,6 +43,10 @@ impl Element for Window {
         )
     }
 
+    fn set_bounds(&mut self, new_bounds : Rect) {
+        self.bounds = new_bounds;
+    }
+
     fn get_children(&self) -> &[String] {
         &self.children
     }

@@ -13,18 +13,18 @@ impl GameState for State {
         if let Some(gui) = &mut self.gui {
             ctx.cls();
 
-            if let Some(fps) = element!(gui, "fps", PlainText) {
+            if let Some(fps) = element!(gui, "fps", StatusText) {
                 fps.text = format!("FPS: {}", ctx.fps);
             }            
 
             let events = gui.render(ctx);
-            if let Some(body) = element!(gui, "body", PlainText) {
+            if let Some(body) = element!(gui, "body", StatusText) {
                 body.text = "Body text goes here. One day, it will be pretty.".to_string();
             }
             for e in events.iter().filter(|e| e.widget == "quit") {
                 match e.event_type {
                     EventType::MouseOver => {
-                        if let Some(body) = element!(gui, "body", PlainText) {
+                        if let Some(body) = element!(gui, "body", StatusText) {
                             body.text = "Hovering over the exit".to_string();
                         }
                     }
@@ -47,8 +47,8 @@ impl State {
             .set_base("bg")
             .add(ctx, "menubar", "bg", WidgetType::MenuBar)
             .add(ctx, "statusbar", "bg", WidgetType::StatusBar)
-            .add_explicit("statusbar", MouseOverText::default(ctx, "quit", "Exit", "Alt-X", 1, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)))
-            .add_explicit("statusbar", PlainText::default(ctx, "fps", &format!("FPS: {}", ctx.fps), 16, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)))
+            .add(ctx, "quit", "statusbar", WidgetType::StatusButton{ text : "Exit".to_string(), hotkey: "Alt-X".to_string() })
+            .add(ctx, "fps", "statusbar", WidgetType::StatusText{ text: "FPS: N/A".to_string()})
             .add_explicit("menubar", PlainText::default(ctx, "F", "F", 1, 0, RGB::named(rltk::RED), RGB::named(rltk::LIGHT_GRAY)))
             .add_explicit("menubar", PlainText::default(ctx, "file", "ile", 2, 0, RGB::named(rltk::NAVY), RGB::named(rltk::LIGHT_GRAY)))
             .add_explicit("bg", Window::new(ctx, "win", 10, 10, 50, 30, "This is a window"))
