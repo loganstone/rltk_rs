@@ -1,6 +1,6 @@
 rltk::add_wasm_support!();
 
-use rltk::{Console, GameState, Rltk, element};
+use rltk::{Console, GameState, Rltk, element, Rect};
 use rltk::gui::*;
 
 struct State {
@@ -30,7 +30,8 @@ impl GameState for State {
                 .set_base("background")
                 .add(ctx, WidgetType::StatusBar, "statusbar", "background")
                 .add(ctx, WidgetType::StatusText{text : "FPS: 00".to_string()}, "fps", "statusbar")
-                .add(ctx, WidgetType::StatusText{text : "Frame Time: 00".to_string()}, "frametime", "statusbar");
+                .add(ctx, WidgetType::StatusText{text : "Frame Time: 00".to_string()}, "frametime", "statusbar")
+                .add(ctx, WidgetType::Window{ pos : Rect::new(5,5,40,20), title: "Hello Window".to_string() }, "win1", "background");
             self.ui = Some(ui);
         }
     }    

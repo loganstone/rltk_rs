@@ -45,6 +45,10 @@ impl Rect {
     pub fn width(&self) -> i32 {
         i32::abs(self.x2 - self.x1)
     }
+
+    pub fn height(&self) -> i32 {
+        i32::abs(self.y2 - self.y1)
+    }
 }
 
 impl ops::Add<Rect> for Rect {

@@ -1,7 +1,7 @@
-use super::{Rltk, Rect, Console, Element, ElementStorage, Placement, ReflowType};
+use super::{Rltk, Rect, TextUI};
+use std::any::Any;
 use std::collections::HashMap;
 
-#[derive(Default)]
 pub struct ElementStore {
     element_store : Vec<ElementStorage>,
     element_keys : HashMap<String, usize>,
@@ -19,29 +19,30 @@ impl ElementStore {
         self.element_keys.get(&id.to_string())
     }
 
-    pub fn add_element(&mut self, 
-        key : String,
-        element : Box<dyn Element>, 
-        parent_id_option : Option<usize>, 
-        physical_bounds : Rect, 
-        placement : Placement) -> usize 
-    {
-        self.element_store.push(ElementStorage::new(element, physical_bounds, placement, parent_id_option));
+    pub fn add_element(&mut self, key : String, element : Box<dyn Element>, parent_id_option : Option<usize>) -> usize {
+        self.element_store.push(ElementStorage::new(element));
         let vec_key = self.element_store.len()-1;
         self.element_keys.insert(key, vec_key);
 
         if let Some(parent_id) = parent_id_option {
-            self.element_store[parent_id].children.push(vec_key);
+            self.element_store[parent_id].add_child(vec_key);
         }
 
         vec_key
     }
 
-    pub fn render(&mut self, ctx : &mut Rltk, id : usize) {
-        let screen_size = ctx.get_char_size();
-        let physical_bounds = Rect::new(0, 0, screen_size.0 as i32, screen_size.1 as i32);
-        self.element_store[id].render(ctx, physical_bounds);
-        render_element(self, ctx, id, physical_bounds);
+    pub fn render(&self, ctx : &mut Rltk, id : usize) {
+        self.element_store[id].render(ctx);
+        self.render_element(ctx, id);
+    }
+
+    fn render_element(&self, ctx : &mut Rltk, id : usize) {
+        for child_id in self.element_store[id].get_children().iter() {
+            let element = &self.element_store[*child_id];
+            if element.render(ctx) {
+                self.render_element(ctx, *child_id);
+            }
+        }
     }
 
     #[allow(clippy::borrowed_box)]
@@ -49,69 +50,66 @@ impl ElementStore {
         &mut self.element_store[id].element
     }
 
-    pub fn get_physical_bounds(&self, id: usize) -> Rect {
-        self.element_store[id].physical_bounds
+    pub fn get_bounds(&self, id : usize) -> Rect {
+        self.element_store[id].element.get_info().bounds
     }
 
-    fn get_children_of_element(&self, id : usize) -> Vec<usize> {
-        self.element_store[id].children.clone()
-    }
-
-    fn by_id(&mut self, id : usize) -> &mut ElementStorage {
-        &mut self.element_store[id]
+    pub fn get_child_widths(&self, id : usize) -> i32 {
+        self.element_store[id].element.get_child_widths(&self)
     }
 }
 
-fn render_element(element_store : &mut ElementStore, ctx : &mut Rltk, id : usize, parent_bounds : Rect) {
-    let child_elements = element_store.get_children_of_element(id);
+pub struct ElementStorage {
+    deleted : bool,
+    visible : bool,
+    element : Box<dyn Element>
+}
 
-    let reflow_type = element_store.element_by_id(id).is_container();
-    match reflow_type {
-        ReflowType::None => {}
-        _ => {
-            let mut dirty = false;
-            child_elements.iter().for_each(|e| {
-                let elem = element_store.element_by_id(*e);
-                if elem.flow_dirty() { 
-                    dirty = true;
-                    elem.mark_flow_clean();
-                }
-            });
-
-            if dirty {
-                match reflow_type {
-                    ReflowType::Horizontal => horizontal_reflow(element_store, &child_elements),
-                    ReflowType::Vertical => vertical_reflow(element_store, &child_elements),
-                    _ => {}
-                }
-            }
+impl ElementStorage {
+    pub fn new(element : Box<dyn Element>) -> ElementStorage {
+        ElementStorage {
+            deleted : false,
+            visible : true,
+            element
         }
     }
 
-    for child_id in child_elements.iter() {
-        let element = element_store.by_id(*child_id);
-        if let Some(bounds) = element.render(ctx, parent_bounds) {
-            render_element(element_store, ctx, *child_id, bounds);
+    pub fn render(&self, ctx : &mut Rltk) -> bool {
+        if !self.deleted && self.visible {
+            self.element.render(ctx);
+            return true;
         }
+        false
+    }
+
+    pub fn get_children(&self) -> &[usize] {
+        self.element.get_children()
+    }
+
+    pub fn add_child(&mut self, id : usize) {
+        self.element.add_child(id);
     }
 }
 
-fn horizontal_reflow(element_store : &mut ElementStore, children : &[usize]) {
-    let mut x = 1;
-    for child_id in children.iter() {
-        let w = element_store.element_by_id(*child_id).desired_width();
-        element_store.by_id(*child_id).physical_bounds = Rect::new(x, 0, w, 1);
-        x += w;
-    }
+pub enum Placement {
+    Absolute,
+    Relative
 }
 
-fn vertical_reflow(element_store : &mut ElementStore, children : &[usize]) {
-    let mut y = 1;
-    for child_id in children.iter() {
-        let elem = element_store.element_by_id(*child_id);
-        let h = elem.desired_height();
-        let w = elem.desired_width();
-        element_store.by_id(*child_id).physical_bounds = Rect::new(1, y, w, h);
-        y += h;
-    }
+pub struct ElementInfo {
+    pub placement : Placement,
+    pub bounds : Rect,
+    pub parent : Option<usize>,
+    pub children : Vec<usize>
+}
+
+pub trait Element {
+    fn get_info(&self) -> &ElementInfo;
+    fn get_info_mut(&mut self) -> &mut ElementInfo;
+    fn render(&self, _ctx : &mut Rltk) {}
+    fn get_children(&self) -> &[usize] { &self.get_info().children }
+    fn add_child(&mut self, id : usize);
+    fn get_child_widths(&self, _ui : &ElementStore) -> i32 { 0 }
+    fn as_any(&mut self) -> &mut dyn Any;
+    fn supports_focus(&self) -> bool { false }
 }

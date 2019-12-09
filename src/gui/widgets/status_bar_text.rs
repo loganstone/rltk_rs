@@ -1,4 +1,4 @@
-use super::{ElementInfo, RGB, Rltk, Element, TextUI, Placement, Rect, Console};
+use super::{ElementInfo, RGB, Rltk, Element, ElementStore, Placement, Rect, Console, Theme};
 use std::any::Any;
 
 pub struct StatusBarText {
@@ -9,7 +9,7 @@ pub struct StatusBarText {
 }
 
 impl StatusBarText {
-    pub fn new<S: ToString>(ui : &TextUI, parent : Option<usize>, text : S) -> Box<StatusBarText> {
+    pub fn new<S: ToString>(ui : &ElementStore, theme: &Theme, parent : Option<usize>, text : S) -> Box<StatusBarText> {
         let t = text.to_string();
         let length = t.len() as i32 + 1;
         let parent_id = parent.unwrap();
@@ -23,8 +23,8 @@ impl StatusBarText {
                 children : Vec::new()
             },
             text : t,
-            fg : ui.theme.status_bar_text.fg, 
-            bg : ui.theme.status_bar_text.bg
+            fg : theme.status_bar_text.fg, 
+            bg : theme.status_bar_text.bg
         })
     }
 
