@@ -33,6 +33,18 @@ impl Rect {
     pub fn xy_in_rect(&self, point : (i32,i32)) -> bool  {
         point.0 >= self.x1 && point.0 <= self.x2 && point.1 >= self.y1 && point.1 <= self.y2
     }
+
+    pub fn for_each<F>(&self, mut f: F) where F: FnMut((i32, i32)) {
+        for y in self.y1 .. self.y2 {
+            for x in self.x1 .. self.x2 {
+                f((x, y));
+            }
+        }
+    }
+
+    pub fn width(&self) -> i32 {
+        i32::abs(self.x2 - self.x1)
+    }
 }
 
 impl ops::Add<Rect> for Rect {
