@@ -8,4 +8,4 @@ pub use event::{Event, EventType};
 mod ui;
 pub use ui::{UI, WidgetType};
 mod theme;
-pub use theme::{Theme, GlyphColor};
+pub use theme::{Theme, GlyphColor, ColorPair};
