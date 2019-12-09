@@ -1,4 +1,4 @@
-use super::{Element, Event, EventType, Theme};
+use super::{Element, Event, EventType, Theme, UI};
 mod background;
 pub use background::Background;
 mod statusbar;
@@ -11,3 +11,7 @@ mod window;
 pub use window::Window;
 mod mouse_over_text;
 pub use mouse_over_text::MouseOverText;
+mod status_button;
+pub use status_button::StatusButton;
+mod status_text;
+pub use status_text::StatusText;

@@ -26,7 +26,9 @@ impl UI {
         match widget {
             WidgetType::Background => self.add_explicit(parent, Background::default(ctx, id, self.theme)),
             WidgetType::MenuBar => self.add_explicit(parent, MenuBar::default(ctx, id, self.theme)),
-            WidgetType::StatusBar => self.add_explicit(parent, StatusBar::default(ctx, id, self.theme))
+            WidgetType::StatusBar => self.add_explicit(parent, StatusBar::default(ctx, id, self.theme)),
+            WidgetType::StatusButton{text, hotkey} => self.add_explicit(parent, StatusButton::default(id, &text, &hotkey, self.theme)),
+            WidgetType::StatusText{text} => self.add_explicit(parent, StatusText::default(id, &text, self.theme))
         };
         self
     }
@@ -40,11 +42,11 @@ impl UI {
         self
     }
 
-    pub fn render(&self, ctx : &mut Rltk) -> Vec<Event> {
+    pub fn render(&mut self, ctx : &mut Rltk) -> Vec<Event> {
         let size = ctx.get_char_size();
         let b = Rect::new(0, 0, size.0 as i32, size.1 as i32);
-        let mut events : Vec<Event> = Vec::new();
-        self.render_element(ctx, &self.base_element, b, &mut events);
+        let mut events : Vec<Event> = Vec::new();        
+        self.render_element(ctx, &self.base_element.to_string(), b, &mut events);
         events
     }
 
@@ -65,10 +67,17 @@ impl UI {
     pub fn element_by_id(&mut self, id : &str) -> Option<&mut Box<dyn Element>> {
         self.elements.get_mut(id)
     }
+
+    #[allow(clippy::borrowed_box)]
+    pub fn element_by_id_read_only(&self, id : &str) -> Option<&Box<dyn Element>> {
+        self.elements.get(id)
+    }
 }
 
 pub enum WidgetType {
     Background,
     MenuBar,
-    StatusBar
+    StatusBar,
+    StatusButton{ text : String, hotkey: String },
+    StatusText{ text : String }
 }
