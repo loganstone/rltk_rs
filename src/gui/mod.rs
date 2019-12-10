@@ -25,9 +25,8 @@ impl TextUI {
         self.element_store.get_id(id)
     }
 
-    pub fn add_explicit<S : ToString>(&mut self, key: S, element : Box<dyn Element>) -> usize {
-        let parent_id_option = element.get_info().parent;
-        self.element_store.add_element(key.to_string(), element, parent_id_option)
+    pub fn add_explicit<S : ToString>(&mut self, key: S, element : Box<dyn Element>, physical_bounds : Rect, placement : Placement, parent_id_option : Option<usize>) -> usize {
+        self.element_store.add_element(key.to_string(), element, parent_id_option, physical_bounds, placement)
     }
 
     pub fn add<S : ToString>(&mut self, ctx : &mut Rltk, widget : WidgetType, key : S, parent : S) -> &mut Self {
@@ -43,16 +42,47 @@ impl TextUI {
     pub fn add_return_id<S : ToString>(&mut self, ctx : &mut Rltk, widget : WidgetType, key : S, parent : Option<usize>) -> usize {
         match widget {
             WidgetType::ScreenBackground => {
-                self.add_explicit(key, SolidBackground::screen_background(ctx, &self.theme, parent))
+                let screen_size = ctx.get_char_size();
+                let bounds = Rect::new(0, 0, screen_size.0 as i32, screen_size.1 as i32);
+                self.add_explicit(
+                    key, 
+                    SolidBackground::screen_background(&self.theme), 
+                    bounds, 
+                    Placement::Absolute,
+                    parent
+                )
             }
             WidgetType::StatusBar => {
-                self.add_explicit(key, StatusBar::new(ctx, &self.element_store, &self.theme, parent))
+                let parent_bounds = self.element_store.get_physical_bounds(parent.unwrap());
+                self.add_explicit(
+                    key, 
+                    StatusBar::new(&self.theme),
+                    Rect::new(parent_bounds.x1, parent_bounds.y2 - 1, parent_bounds.width(), 1),
+                    Placement::Relative,
+                    parent
+                )
             }
             WidgetType::StatusText{text} => {
-                self.add_explicit(key, StatusBarText::new(&self.element_store, &self.theme, parent, text))
+                let parent_id = parent.unwrap();
+                let parent_bounds = self.element_store.get_physical_bounds(parent_id);
+                let x = 1 + parent_bounds.x1 + self.element_store.calc_child_width(parent_id);
+                let width = text.len() as i32 + 1;
+                self.add_explicit(
+                    key, 
+                    StatusBarText::new(&self.theme, text),
+                    Rect::new(x, 0, width, 1),
+                    Placement::Relative,
+                    parent
+                )
             }
             WidgetType::Window{pos, title} => {
-                self.add_explicit(key, Window::new(&self.element_store, &self.theme, parent, pos, title))
+                self.add_explicit(
+                    key, 
+                    Window::new(&self.theme, title),
+                    Rect::new(pos.x1,pos.y1,pos.width(),pos.height()),
+                    Placement::Relative,
+                    parent
+                )
             }
         }
     }
@@ -67,6 +97,7 @@ impl TextUI {
         self.element_store.render(ctx, self.base_element);
     }    
 
+    #[allow(clippy::borrowed_box)]
     pub fn element_by_id(&mut self, id : usize) -> &mut Box<dyn Element> {
         self.element_store.element_by_id(id)
     }

@@ -1,4 +1,4 @@
-use super::{RGB, Rltk, ElementInfo, Element, Theme, Placement, Rect, Console, TextUI, to_cp437, ElementStore};
+use super::{RGB, Rltk, Element, Theme, Rect, Console, to_cp437};
 mod solid_background;
 pub use solid_background::SolidBackground;
 mod status_bar;
