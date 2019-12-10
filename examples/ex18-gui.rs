@@ -21,6 +21,10 @@ impl GameState for State {
             }
 
             ui.render(ctx);
+
+            if let Some(mp) = element!(ui, *ui.get_id("b4").unwrap(), PlainText) {
+                mp.set_text(format!("Mouse Position: {}, {}", ctx.mouse_pos().0, ctx.mouse_pos().1));
+            }
         } else {
             let mut ui = TextUI::new(Theme::turbo_vision());
             ui
@@ -33,6 +37,8 @@ impl GameState for State {
                 .add(ctx, WidgetType::PlainText{ text : "This is a plain text line.".to_string(), fg : RGB::named(rltk::YELLOW), bg : RGB::named(rltk::BLACK) }, "b1", "win1")
                 .add(ctx, WidgetType::PlainText{ text : "It doesn't do wrapping yet".to_string(), fg : RGB::named(rltk::CYAN), bg : RGB::named(rltk::BLACK) }, "b2", "win1")
                 .add(ctx, WidgetType::PlainText{ text : "but vertical re-flow is working".to_string(), fg : RGB::named(rltk::CYAN), bg : RGB::named(rltk::BLACK) }, "b3", "win1")
+                .add(ctx, WidgetType::Window{ pos : Rect::new(10,15,40,5), title: "Second Window".to_string() }, "win2", "background")
+                .add(ctx, WidgetType::PlainText{ text : "This is another plain text line.".to_string(), fg : RGB::named(rltk::YELLOW), bg : RGB::named(rltk::BLACK) }, "b4", "win2")
                 ;
                 
             self.ui = Some(ui);
