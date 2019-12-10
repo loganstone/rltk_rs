@@ -1,4 +1,4 @@
-use super::{RGB, Rltk, Element, Rect, Console, Theme};
+use super::{RGB, Rltk, Element, Rect, Console, Theme, ReflowType};
 use std::any::Any;
 
 pub struct StatusBar {
@@ -26,4 +26,6 @@ impl Element for StatusBar {
     fn as_any(&mut self) -> &mut dyn Any {
         self
     }
+
+    fn is_container(&self) -> ReflowType { ReflowType::Horizontal }
 }

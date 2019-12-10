@@ -1,4 +1,4 @@
-use super::{RGB, Rltk, Element, Rect, Console, to_cp437, Theme};
+use super::{RGB, Rltk, Element, Rect, Console, to_cp437, Theme, ReflowType};
 use std::any::Any;
 
 pub struct Window {
@@ -43,4 +43,5 @@ impl Element for Window {
     fn as_any(&mut self) -> &mut dyn Any {
         self
     }
+    fn is_container(&self) -> ReflowType { ReflowType::Vertical }
 }
