@@ -1,19 +1,19 @@
-use super::{RGB, Rltk, Element, Rect, Console, Theme};
+use super::{RGB, Rltk, Element, Rect, Console};
 use std::any::Any;
 
-pub struct StatusBarText {
+pub struct PlainText {
     pub text : String,
     pub fg : RGB,
     pub bg : RGB,
     pub dirty : bool
 }
 
-impl StatusBarText {
-    pub fn new<S: ToString>(theme: &Theme, text : S) -> Box<StatusBarText> {
-        Box::new(StatusBarText{            
+impl PlainText {
+    pub fn new<S: ToString>(text : S, fg : RGB, bg : RGB) -> Box<PlainText> {
+        Box::new(PlainText{            
             text : text.to_string(),
-            fg : theme.status_bar_text.fg, 
-            bg : theme.status_bar_text.bg,
+            fg, 
+            bg,
             dirty : true
         })
     }
@@ -24,7 +24,7 @@ impl StatusBarText {
     }    
 }
 
-impl Element for StatusBarText {
+impl Element for PlainText {
     fn render(&self, ctx : &mut Rltk, physical_bounds : Rect) {
         ctx.print_color(physical_bounds.x1, physical_bounds.y1, self.fg, self.bg, &self.text);
     }
