@@ -5,6 +5,10 @@ mod widgets;
 pub use widgets::{SolidBackground, StatusBar, StatusBarText, Window};
 mod element_store;
 use element_store::*;
+mod element;
+use element::Element;
+mod element_storage;
+pub use element_storage::{ElementStorage, Placement};
 
 pub struct TextUI {
     element_store : ElementStore,
@@ -93,7 +97,7 @@ impl TextUI {
         self
     }
 
-    pub fn render(&self, ctx : &mut Rltk) {
+    pub fn render(&mut self, ctx : &mut Rltk) {
         self.element_store.render(ctx, self.base_element);
     }    
 

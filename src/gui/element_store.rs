@@ -1,5 +1,4 @@
-use super::{Rltk, Rect, Console};
-use std::any::Any;
+use super::{Rltk, Rect, Console, Element, ElementStorage, Placement};
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -38,20 +37,11 @@ impl ElementStore {
         vec_key
     }
 
-    pub fn render(&self, ctx : &mut Rltk, id : usize) {
+    pub fn render(&mut self, ctx : &mut Rltk, id : usize) {
         let screen_size = ctx.get_char_size();
         let physical_bounds = Rect::new(0, 0, screen_size.0 as i32, screen_size.1 as i32);
         self.element_store[id].render(ctx, physical_bounds);
-        self.render_element(ctx, id, physical_bounds);
-    }
-
-    fn render_element(&self, ctx : &mut Rltk, id : usize, parent_bounds : Rect) {
-        for child_id in self.element_store[id].children.iter() {
-            let element = &self.element_store[*child_id];
-            if let Some(bounds) = element.render(ctx, parent_bounds) {
-                self.render_element(ctx, *child_id, bounds);
-            }
-        }
+        render_element(self, ctx, id, physical_bounds);
     }
 
     #[allow(clippy::borrowed_box)]
@@ -70,50 +60,23 @@ impl ElementStore {
         }
         width
     }
-}
 
-pub struct ElementStorage {
-    deleted : bool,
-    visible : bool,
-    physical_bounds : Rect,
-    element : Box<dyn Element>,
-    placement : Placement,
-    pub parent : Option<usize>,
-    pub children : Vec<usize>
-}
-
-impl ElementStorage {
-    pub fn new(element : Box<dyn Element>, physical_bounds : Rect, placement : Placement, parent : Option<usize>) -> ElementStorage {
-        ElementStorage {
-            deleted : false,
-            visible : true,
-            element,
-            physical_bounds,
-            placement,
-            parent,
-            children : Vec::new()
-        }
+    fn get_children_of_element(&self, id : usize) -> Vec<usize> {
+        self.element_store[id].children.clone()
     }
 
-    pub fn render(&self, ctx : &mut Rltk, parent_bounds : Rect) -> Option<Rect> {
-        if !self.deleted && self.visible {
-            let bounds = match self.placement {
-                Placement::Absolute => self.physical_bounds,
-                Placement::Relative => self.physical_bounds + parent_bounds
-            };
-            self.element.render(ctx, bounds);
-            return Some(bounds);
-        }
-        None
+    fn by_id(&mut self, id : usize) -> &mut ElementStorage {
+        &mut self.element_store[id]
     }
 }
 
-pub enum Placement {
-    Absolute,
-    Relative
+fn render_element(element_store : &mut ElementStore, ctx : &mut Rltk, id : usize, parent_bounds : Rect) {
+    let child_elements = element_store.get_children_of_element(id);
+    for child_id in child_elements.iter() {
+        let element = element_store.by_id(*child_id);
+        if let Some(bounds) = element.render(ctx, parent_bounds) {
+            render_element(element_store, ctx, *child_id, bounds);
+        }
+    }
 }
 
-pub trait Element {
-    fn render(&self, _ctx : &mut Rltk, _physical_bounds : Rect) {}
-    fn as_any(&mut self) -> &mut dyn Any;
-}
