@@ -1,6 +1,6 @@
 rltk::add_wasm_support!();
 
-use rltk::{Console, GameState, Rltk, element, Rect};
+use rltk::{Console, GameState, Rltk, element, Rect, RGB};
 use rltk::gui::*;
 
 struct State {
@@ -29,7 +29,11 @@ impl GameState for State {
                 .add(ctx, WidgetType::StatusBar, "statusbar", "background")
                 .add(ctx, WidgetType::StatusText{text : "FPS: 00".to_string()}, "fps", "statusbar")
                 .add(ctx, WidgetType::StatusText{text : "Frame Time: 00".to_string()}, "frametime", "statusbar")
-                .add(ctx, WidgetType::Window{ pos : Rect::new(5,5,40,20), title: "Hello Window".to_string() }, "win1", "background");
+                .add(ctx, WidgetType::Window{ pos : Rect::new(5,5,40,5), title: "Hello Window".to_string() }, "win1", "background")
+                .add(ctx, WidgetType::PlainText{ text : "This is a plain text line.".to_string(), fg : RGB::named(rltk::YELLOW), bg : RGB::named(rltk::BLACK) }, "b1", "win1")
+                .add(ctx, WidgetType::PlainText{ text : "It doesn't do wrapping yet".to_string(), fg : RGB::named(rltk::CYAN), bg : RGB::named(rltk::BLACK) }, "b2", "win1")
+                .add(ctx, WidgetType::PlainText{ text : "but vertical re-flow is working".to_string(), fg : RGB::named(rltk::CYAN), bg : RGB::named(rltk::BLACK) }, "b3", "win1")
+                ;
                 
             self.ui = Some(ui);
         }
