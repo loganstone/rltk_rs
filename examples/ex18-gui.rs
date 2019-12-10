@@ -13,12 +13,10 @@ impl GameState for State {
 
         if let Some(ui) = &mut self.ui {
 
-            let fps_id = *ui.get_id("fps").unwrap();
-            if let Some(fps) = element!(ui, fps_id, StatusBarText) {
+            if let Some(fps) = element!(ui, *ui.get_id("fps").unwrap(), StatusBarText) {
                 fps.set_text(format!("FPS: {}", ctx.fps));
             }
-            let ft_id = *ui.get_id("frametime").unwrap();
-            if let Some(ft) = element!(ui, ft_id, StatusBarText) {
+            if let Some(ft) = element!(ui, *ui.get_id("frametime").unwrap(), StatusBarText) {
                 ft.set_text(format!("Frame Time: {}", ctx.frame_time_ms));
             }
 
@@ -32,6 +30,7 @@ impl GameState for State {
                 .add(ctx, WidgetType::StatusText{text : "FPS: 00".to_string()}, "fps", "statusbar")
                 .add(ctx, WidgetType::StatusText{text : "Frame Time: 00".to_string()}, "frametime", "statusbar")
                 .add(ctx, WidgetType::Window{ pos : Rect::new(5,5,40,20), title: "Hello Window".to_string() }, "win1", "background");
+                
             self.ui = Some(ui);
         }
     }    
