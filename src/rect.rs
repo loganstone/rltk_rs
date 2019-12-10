@@ -4,7 +4,7 @@ use std::ops;
     feature = "serialization",
     derive(serde::Serialize, serde::Deserialize)
 )]
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub struct Rect {
     pub x1 : i32,
     pub x2 : i32,
@@ -15,6 +15,10 @@ pub struct Rect {
 impl Rect {
     pub fn new(x:i32, y: i32, w:i32, h:i32) -> Rect {
         Rect{x1:x, y1:y, x2:x+w, y2:y+h}
+    }
+
+    pub fn zero() -> Rect {
+        Rect{x1:0, y1:0, x2: 0, y2: 0}
     }
 
     // Returns true if this overlaps with other
@@ -54,10 +58,12 @@ impl Rect {
 impl ops::Add<Rect> for Rect {
     type Output = Rect;
     fn add(mut self, rhs: Rect) -> Rect {
+        let w = self.width();
+        let h = self.height();
         self.x1 += rhs.x1;
-        self.x2 += rhs.x2;
+        self.x2 = self.x1 + w;
         self.y1 += rhs.y1;
-        self.y2 += rhs.y2;
+        self.y2 = self.y1 + h;
         self
     }
 }
