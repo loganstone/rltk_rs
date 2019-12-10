@@ -1,4 +1,4 @@
-use super::{Rltk, Rect, Console, Element, ElementStorage, Placement};
+use super::{Rltk, Rect, Console, Element, ElementStorage, Placement, ReflowType};
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -53,14 +53,6 @@ impl ElementStore {
         self.element_store[id].physical_bounds
     }
 
-    pub fn calc_child_width(&self, id : usize) -> i32 {
-        let mut width = 0;
-        for child in self.element_store[id].children.iter() {
-            width += self.element_store[*child].physical_bounds.width();
-        }
-        width
-    }
-
     fn get_children_of_element(&self, id : usize) -> Vec<usize> {
         self.element_store[id].children.clone()
     }
@@ -72,6 +64,30 @@ impl ElementStore {
 
 fn render_element(element_store : &mut ElementStore, ctx : &mut Rltk, id : usize, parent_bounds : Rect) {
     let child_elements = element_store.get_children_of_element(id);
+
+    let reflow_type = element_store.element_by_id(id).is_container();
+    match reflow_type {
+        ReflowType::None => {}
+        _ => {
+            let mut dirty = false;
+            child_elements.iter().for_each(|e| {
+                let elem = element_store.element_by_id(*e);
+                if elem.flow_dirty() { 
+                    dirty = true;
+                    elem.mark_flow_clean();
+                }
+            });
+
+            if dirty {
+                match reflow_type {
+                    ReflowType::Horizontal => horizontal_reflow(element_store, &child_elements),
+                    ReflowType::Vertical => vertical_reflow(element_store, &child_elements),
+                    _ => {}
+                }
+            }
+        }
+    }
+
     for child_id in child_elements.iter() {
         let element = element_store.by_id(*child_id);
         if let Some(bounds) = element.render(ctx, parent_bounds) {
@@ -80,3 +96,22 @@ fn render_element(element_store : &mut ElementStore, ctx : &mut Rltk, id : usize
     }
 }
 
+fn horizontal_reflow(element_store : &mut ElementStore, children : &[usize]) {
+    let mut x = 1;
+    for child_id in children.iter() {
+        let w = element_store.element_by_id(*child_id).desired_width();
+        element_store.by_id(*child_id).physical_bounds = Rect::new(x, 0, w, 1);
+        x += w;
+    }
+}
+
+fn vertical_reflow(element_store : &mut ElementStore, children : &[usize]) {
+    let mut y = 1;
+    for child_id in children.iter() {
+        let elem = element_store.element_by_id(*child_id);
+        let h = elem.desired_height();
+        let w = elem.desired_width();
+        element_store.by_id(*child_id).physical_bounds = Rect::new(1, y, w, h);
+        y += h;
+    }
+}

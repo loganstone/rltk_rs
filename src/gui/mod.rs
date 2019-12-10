@@ -2,11 +2,11 @@ use crate::{Rltk, Rect, RGB, to_cp437, Console};
 mod theme;
 pub use theme::*;
 mod widgets;
-pub use widgets::{SolidBackground, StatusBar, StatusBarText, Window};
+pub use widgets::*;
 mod element_store;
 use element_store::*;
 mod element;
-use element::Element;
+use element::{Element, ReflowType};
 mod element_storage;
 pub use element_storage::{ElementStorage, Placement};
 
@@ -67,14 +67,11 @@ impl TextUI {
                 )
             }
             WidgetType::StatusText{text} => {
-                let parent_id = parent.unwrap();
-                let parent_bounds = self.element_store.get_physical_bounds(parent_id);
-                let x = 1 + parent_bounds.x1 + self.element_store.calc_child_width(parent_id);
                 let width = text.len() as i32 + 1;
                 self.add_explicit(
                     key, 
                     StatusBarText::new(&self.theme, text),
-                    Rect::new(x, 0, width, 1),
+                    Rect::new(0, 0, width, 1),
                     Placement::Relative,
                     parent
                 )
@@ -83,7 +80,17 @@ impl TextUI {
                 self.add_explicit(
                     key, 
                     Window::new(&self.theme, title),
-                    Rect::new(pos.x1,pos.y1,pos.width(),pos.height()),
+                    Rect::new(pos.x1, pos.y1, pos.width(), pos.height()),
+                    Placement::Relative,
+                    parent
+                )
+            }
+            WidgetType::PlainText{text, fg, bg} => {
+                let width = text.len() as i32;
+                self.add_explicit(
+                    key, 
+                    PlainText::new(text, fg, bg),
+                    Rect::new(1, 1, width, 1),
                     Placement::Relative,
                     parent
                 )
@@ -111,5 +118,6 @@ pub enum WidgetType {
     ScreenBackground,
     StatusBar,
     StatusText{ text : String },
-    Window { pos : Rect, title : String }
+    Window { pos : Rect, title : String },
+    PlainText{ text : String, fg : RGB, bg : RGB }
 }

@@ -1,4 +1,4 @@
-use super::{RGB, Rltk, Element, Theme, Rect, Console, to_cp437};
+use super::{RGB, Rltk, Element, Theme, Rect, Console, to_cp437, ReflowType};
 mod solid_background;
 pub use solid_background::SolidBackground;
 mod status_bar;
@@ -7,3 +7,5 @@ mod status_bar_text;
 pub use status_bar_text::StatusBarText;
 mod window;
 pub use window::Window;
+mod plain_text;
+pub use plain_text::PlainText;
