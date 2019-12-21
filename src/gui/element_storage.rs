@@ -12,7 +12,8 @@ pub struct ElementStorage {
     pub element : Box<dyn Element>,
     pub placement : Placement,
     pub parent : Option<usize>,
-    pub children : Vec<usize>
+    pub children : Vec<usize>,
+    pub on_update : Option<fn(&mut Rltk, &mut Box<dyn Element>)>
 }
 
 impl ElementStorage {
@@ -24,7 +25,8 @@ impl ElementStorage {
             physical_bounds,
             placement,
             parent,
-            children : Vec::new()
+            children : Vec::new(),
+            on_update : None
         }
     }
 
@@ -38,5 +40,11 @@ impl ElementStorage {
             return Some(bounds);
         }
         None
+    }
+
+    pub fn update(&mut self, ctx : &mut Rltk) {
+        if let Some(updater) = self.on_update {
+            updater(ctx, &mut self.element)
+        }
     }
 }

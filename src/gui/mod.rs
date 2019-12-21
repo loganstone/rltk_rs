@@ -43,6 +43,15 @@ impl TextUI {
         self
     }
 
+    pub fn bind_update<S : ToString>(&mut self, key : S, updater : fn(&mut Rltk, &mut Box<dyn Element>)) -> &mut Self {
+        let parent_id = self.element_store.get_id(key.to_string());
+        if let Some(id) = parent_id {
+            let id_copy = *id; // To avoid the borrow warning
+            self.element_store.set_update_function(id_copy, updater);
+        }
+        self
+    }
+
     pub fn add_return_id<S : ToString>(&mut self, ctx : &mut Rltk, widget : WidgetType, key : S, parent : Option<usize>) -> usize {
         match widget {
             WidgetType::ScreenBackground => {
@@ -105,8 +114,9 @@ impl TextUI {
     }
 
     pub fn render(&mut self, ctx : &mut Rltk) {
+        self.element_store.update(self.base_element, ctx);
         self.element_store.render(ctx, self.base_element);
-    }    
+    }
 
     #[allow(clippy::borrowed_box)]
     pub fn element_by_id(&mut self, id : usize) -> &mut Box<dyn Element> {
