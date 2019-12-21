@@ -60,6 +60,24 @@ impl ElementStore {
     fn by_id(&mut self, id : usize) -> &mut ElementStorage {
         &mut self.element_store[id]
     }
+
+    pub fn update(&mut self, id : usize, ctx: &mut Rltk) {
+        self.element_store[id].update(ctx);
+        update_element(self, id, ctx);
+    }
+
+    pub fn set_update_function(&mut self, id : usize, updater : fn(&mut Rltk, &mut Box<dyn Element>)) {
+        self.element_store[id].on_update = Some(updater);
+    }
+}
+
+fn update_element(element_store : &mut ElementStore, id : usize, ctx : &mut Rltk) {
+    let child_elements = element_store.get_children_of_element(id);
+    for child_id in child_elements.iter() {
+        let element = element_store.by_id(*child_id);
+        element.update(ctx);
+        update_element(element_store, *child_id, ctx);
+    }
 }
 
 fn render_element(element_store : &mut ElementStore, ctx : &mut Rltk, id : usize, parent_bounds : Rect) {
