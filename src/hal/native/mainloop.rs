@@ -33,15 +33,22 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
     // physical size (suitable for direct use with the viewport).
     //
     // https://github.com/thebracket/rltk_rs/issues/46
-    let initial_dpi_factor = wc.window().scale_factor();
+    //let initial_dpi_factor = wc.window().scale_factor();
+    let physical_size = wc.window().inner_size();
+    rltk.resize_pixels(physical_size.width as u32, physical_size.height as u32);
     unsafe {
         rltk.backend.platform.gl.viewport(
             0,
             0,
-            (rltk.width_pixels as f64 * initial_dpi_factor) as i32,
-            (rltk.height_pixels as f64 * initial_dpi_factor) as i32,
+            physical_size.width as i32,
+            physical_size.height as i32,
         );
     }
+    rltk.backend.platform.backing_buffer = Framebuffer::build_fbo(
+        &rltk.backend.platform.gl,
+        physical_size.width as i32,
+        physical_size.height as i32,
+    );
 
     el.run(move |event, _, control_flow| {
         *control_flow = TICK_TYPE;
