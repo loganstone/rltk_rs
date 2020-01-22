@@ -102,23 +102,9 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
                 WindowEvent::CursorMoved { position: pos, .. } => {
-                    // TESTED ON Ubuntu/Wayland in a VM.
-                    //
-                    // There's a real bug here in `winit`. So for a 640 wide screen,
-                    // with a scaling factor of 200%:
-                    // * The scale factor shows as 2.0 (correct)
-                    // * The PhysicalPosition from `position` shows as 640 at the right
-                    // * But the PhysicalSize from `inner_size` shows 1280.
-                    // So they are operating on different scales. So much for strong types.
-                    // Worse, converting pos.to_logical actually divides by two doubling
-                    // the problem.
-                    // So we end up with this nasty hack where we're doing the scaling
-                    // ourselves, and it will probably break in a future `winit` update.
-                    let sf = wc.window().scale_factor();
-                    let real_pos = ( pos.x as f64 * sf as f64, pos.y as f64 * sf as f64 );
                     rltk.mouse_pos = (
-                        real_pos.0 as i32,
-                        real_pos.1 as i32,
+                        pos.x as i32,
+                        pos.y as i32,
                     );
                 }
 
