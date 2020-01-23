@@ -6,35 +6,7 @@ use std::time::Instant;
 
 const TICK_TYPE: ControlFlow = ControlFlow::Poll;
 
-pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
-    let now = Instant::now();
-    let mut prev_seconds = now.elapsed().as_secs();
-    let mut prev_ms = now.elapsed().as_millis();
-    let mut frames = 0;
-
-    // We're doing a little dance here to get around lifetime/borrow checking.
-    // Removing the context data from RLTK in an atomic swap, so it isn't borrowed after move.
-    let wrap = std::mem::replace(&mut rltk.backend.platform.context_wrapper, None);
-    let unwrap = wrap.unwrap();
-
-    let el = unwrap.el;
-    let wc = unwrap.wc;
-
-    // RLTK's API exposes, in glutin::dpi terms, a "logical" window size. A
-    // "logical" window size refers to the number of actual pixels on the
-    // screen ("physical" window size) divided by its scaling factor.
-    //
-    // The width_pixels and height_pixels values, as set by RLTK consumers,
-    // must be scaled according to the window's scale factor to account for
-    // screen DPI scaling.
-    //
-    // This same scaling is unnecessary when handling window resize events in
-    // the main event loop, as the event itself contains the properly-scaled
-    // physical size (suitable for direct use with the viewport).
-    //
-    // https://github.com/thebracket/rltk_rs/issues/46
-    //let initial_dpi_factor = wc.window().scale_factor();
-    let physical_size = wc.window().inner_size();
+fn on_resize(rltk : &mut Rltk, physical_size : glutin::dpi::PhysicalSize<u32>) {
     rltk.resize_pixels(physical_size.width as u32, physical_size.height as u32);
     unsafe {
         rltk.backend.platform.gl.viewport(
@@ -49,6 +21,23 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
         physical_size.width as i32,
         physical_size.height as i32,
     );
+}
+
+pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
+    let now = Instant::now();
+    let mut prev_seconds = now.elapsed().as_secs();
+    let mut prev_ms = now.elapsed().as_millis();
+    let mut frames = 0;
+
+    // We're doing a little dance here to get around lifetime/borrow checking.
+    // Removing the context data from RLTK in an atomic swap, so it isn't borrowed after move.
+    let wrap = std::mem::replace(&mut rltk.backend.platform.context_wrapper, None);
+    let unwrap = wrap.unwrap();
+
+    let el = unwrap.el;
+    let wc = unwrap.wc;
+
+    on_resize(&mut rltk, wc.window().inner_size());
 
     el.run(move |event, _, control_flow| {
         *control_flow = TICK_TYPE;
@@ -84,23 +73,7 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
             Event::LoopDestroyed => (),
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
-                    // Commenting out to see if it helps the Linux world
-                    //let dpi_factor = wc.window().hidpi_factor();
-                    wc.resize(*physical_size);
-                    rltk.resize_pixels(physical_size.width as u32, physical_size.height as u32);
-                    unsafe {
-                        rltk.backend.platform.gl.viewport(
-                            0,
-                            0,
-                            physical_size.width as i32,
-                            physical_size.height as i32,
-                        );
-                    }
-                    rltk.backend.platform.backing_buffer = Framebuffer::build_fbo(
-                        &rltk.backend.platform.gl,
-                        physical_size.width as i32,
-                        physical_size.height as i32,
-                    );
+                    on_resize(&mut rltk, *physical_size);
                 }
                 /*WindowEvent::RedrawRequested => {
                     //tock(&mut rltk, &mut gamestate, &mut frames, &mut prev_seconds, &mut prev_ms, &now);
