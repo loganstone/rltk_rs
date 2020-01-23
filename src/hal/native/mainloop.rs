@@ -44,7 +44,7 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
 
         if rltk.quitting {
             *control_flow = ControlFlow::Exit;
-        }
+        }        
 
         match event {
             Event::NewEvents(_) => {
@@ -82,8 +82,6 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
                 WindowEvent::CursorMoved { position: pos, .. } => {
-                    let initial_dpi_factor = wc.window().scale_factor();
-                    println!("SF: {:?}, Pos:{:?}, Dim:{:?}", initial_dpi_factor, pos, wc.window().inner_size());
                     rltk.mouse_pos = (
                         pos.x as i32,
                         pos.y as i32,
@@ -104,6 +102,10 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                     ..
                 } => {
                     rltk.key = Some(*virtual_keycode);
+                }
+
+                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                    on_resize(&mut rltk, **new_inner_size);
                 }
 
                 _ => (),
