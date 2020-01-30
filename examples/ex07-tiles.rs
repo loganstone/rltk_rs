@@ -4,9 +4,7 @@
 //////////////////////////////////////////////////////////////
 
 rltk::add_wasm_support!();
-use rltk::{
-    Algorithm2D, BaseMap, Console, DistanceAlg, GameState, Point, Rltk, VirtualKeyCode, RGB,
-};
+use rltk::prelude::*;
 
 extern crate rand;
 use crate::rand::Rng;
@@ -81,6 +79,7 @@ impl State {
 impl GameState for State {
     #[allow(non_snake_case)]
     fn tick(&mut self, ctx: &mut Rltk) {
+        let mut draw_batch = DrawBatch::new();
         match ctx.key {
             None => {} // Nothing happened
             Some(key) => {
@@ -124,8 +123,8 @@ impl GameState for State {
         }
 
         // Clear the screen
-        ctx.set_active_console(0);
-        ctx.cls();
+        draw_batch.target(0);
+        draw_batch.cls();
 
         // Iterate the map array, incrementing coordinates as we go.
         let mut y = 0;
@@ -152,7 +151,11 @@ impl GameState for State {
                         / 10.0);
                 fg = RGB::from_f32(distance, distance, distance);
             }
-            ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.), glyph);
+            draw_batch.set(
+                Point::new(x, y),
+                ColorPair::new(fg, RGB::from_f32(0., 0., 0.)),
+                glyph,
+            );
 
             // Move the coordinates
             x += 1;
@@ -164,15 +167,17 @@ impl GameState for State {
 
         // Render the player @ symbol
         let ppos = idx_xy(self.player_position);
-        ctx.set_active_console(1);
-        ctx.cls();
-        ctx.set(
-            ppos.0,
-            ppos.1,
-            RGB::from_f32(1.0, 1.0, 1.0),
-            RGB::from_f32(0., 0., 0.),
+        draw_batch.target(1);
+        draw_batch.cls();
+        draw_batch.set(
+            Point::from_tuple(ppos),
+            ColorPair::new(RGB::from_f32(1.0, 1.0, 1.0), RGB::from_f32(0., 0., 0.)),
             2,
         );
+
+        draw_batch.submit(0);
+
+        render_draw_buffer(ctx);
     }
 }
 
@@ -184,17 +189,11 @@ impl BaseMap for State {
     fn is_opaque(&self, idx: usize) -> bool {
         self.map[idx as usize] == TileType::Wall
     }
-    fn get_available_exits(&self, _idx: usize) -> Vec<(usize, f32)> {
-        Vec::new()
-    }
-    fn get_pathing_distance(&self, _idx1: usize, _idx2: usize) -> f32 {
-        0.0
-    }
 }
 
 impl Algorithm2D for State {
     fn dimensions(&self) -> Point {
-        Point::new(80, 50)
+        Point::new(WIDTH, HEIGHT)
     }
 }
 
@@ -202,20 +201,26 @@ rltk::embedded_resource!(TILE_FONT, "../resources/example_tiles.png");
 
 fn main() {
     rltk::link_resource!(TILE_FONT, "resources/example_tiles.png");
-    let mut context = Rltk::init_raw(
-        WIDTH as u32 * 16,
-        HEIGHT as u32 * 16,
-        "RLTK Example 07 - Tiles",
-    );
-    let font = context.register_font(rltk::Font::load("resources/example_tiles.png", (16, 16)));
-    context.register_console(
-        rltk::SimpleConsole::init(WIDTH as u32, HEIGHT as u32, &context.backend),
-        font,
-    );
-    context.register_console(
-        rltk::SparseConsole::init(WIDTH as u32, HEIGHT as u32, &context.backend),
-        font,
-    );
+
+    // This initialization is a bit more complicated than the previous examples. It uses
+    // the "raw" initialization to build a tile-based setup from scatch.
+    // new() starts with basically no useful settings
+    let context = RltkBuilder::new()
+        // We specify the CONSOLE dimensions
+        .with_dimensions(WIDTH, HEIGHT)
+        // We specify the size of the tiles
+        .with_tile_dimensions(16, 16)
+        // We give it a window title
+        .with_title("RLTK Example 07 - Tiles")
+        // We register our embedded "example_tiles.png" as a font.
+        .with_font("example_tiles.png", 16, 16)
+        // We want a base simple console for the terrain background
+        .with_simple_console(WIDTH, HEIGHT, "example_tiles.png")
+        // We also want a sparse console atop it to handle moving the character
+        .with_sparse_console(WIDTH, HEIGHT, "example_tiles.png")
+        // And we call the builder function
+        .build();
+
     let gs = State::new();
     rltk::main_loop(context, gs);
 }

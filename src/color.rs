@@ -2,7 +2,7 @@ use super::rex::XpColor;
 use std::ops;
 
 #[cfg_attr(
-    feature = "serialization",
+    feature = "serde",
     derive(serde::Serialize, serde::Deserialize)
 )]
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
@@ -11,6 +11,17 @@ pub struct RGB {
     pub r: f32,
     pub g: f32,
     pub b: f32,
+}
+#[derive(PartialEq, Copy, Clone, Default, Debug)]
+pub struct ColorPair {
+    pub fg: RGB,
+    pub bg: RGB,
+}
+
+impl ColorPair {
+    pub fn new(fg: RGB, bg: RGB) -> Self {
+        ColorPair { fg, bg }
+    }
 }
 
 #[derive(PartialEq, Copy, Clone, Default, Debug)]

@@ -30,8 +30,8 @@ pub use self::fastnoise::*;
 pub use self::fieldofview::{field_of_view, field_of_view_set};
 pub use self::font::Font;
 pub use self::geometry::{
-    line2d, project_angle, Bresenham, BresenhamCircle, DistanceAlg, LineAlg, Point, Point3, Rect,
-    VectorLine,
+    line2d, project_angle, Bresenham, BresenhamCircle, BresenhamCircleNoDiag, DistanceAlg, LineAlg,
+    Point, Point3, Rect, VectorLine,
 };
 pub use self::pathfinding::astar::{a_star_search, NavigationPath};
 pub use self::pathfinding::dijkstra::DijkstraMap;
@@ -45,7 +45,11 @@ pub use algorithm3d::Algorithm3D;
 pub use basemap::BaseMap;
 #[cfg(feature = "parsing")]
 pub use parsing::{parse_dice_string, DiceParseError, DiceType};
+mod command_buffer;
 pub mod embedding;
+pub use command_buffer::*;
+mod initializer;
+pub use initializer::*;
 
 pub mod prelude {
     pub use crate::*;

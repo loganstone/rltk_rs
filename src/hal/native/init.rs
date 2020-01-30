@@ -1,9 +1,11 @@
 use glutin::{dpi::LogicalSize, event_loop::EventLoop, window::WindowBuilder, ContextBuilder};
+use super::InitHints;
 
 pub fn init_raw<S: ToString>(
     width_pixels: u32,
     height_pixels: u32,
     window_title: S,
+    platform_hints: InitHints
 ) -> super::super::super::Rltk {
     use super::super::super::Rltk;
     use super::super::*;
@@ -16,14 +18,19 @@ pub fn init_raw<S: ToString>(
             f64::from(height_pixels),
         ));
     let windowed_context = ContextBuilder::new()
-        .with_gl(glutin::GlRequest::Latest)
-        .with_gl_profile(glutin::GlProfile::Core)
+        .with_gl(platform_hints.gl_version)
+        .with_gl_profile(platform_hints.gl_profile)
         .with_hardware_acceleration(Some(true))
-        .with_vsync(true)
-        .with_srgb(true)
+        .with_vsync(platform_hints.vsync)
+        .with_srgb(platform_hints.srgb)
         .build_windowed(wb, &el)
         .unwrap();
     let windowed_context = unsafe { windowed_context.make_current().unwrap() };
+
+    if platform_hints.fullscreen {
+        let mh = el.available_monitors().nth(0).unwrap();
+        windowed_context.window().set_fullscreen(Some(glutin::window::Fullscreen::Borderless(mh)));
+    }
 
     let gl = glow::Context::from_loader_function(|ptr| {
         windowed_context.get_proc_address(ptr) as *const _
@@ -54,7 +61,12 @@ pub fn init_raw<S: ToString>(
     ));
 
     // Build the backing frame-buffer
-    let backing_fbo = Framebuffer::build_fbo(&gl, width_pixels as i32, height_pixels as i32);
+    let initial_dpi_factor = windowed_context.window().scale_factor();
+    let backing_fbo = Framebuffer::build_fbo(
+        &gl, 
+        (width_pixels as f64 * initial_dpi_factor) as i32, 
+        (height_pixels as f64 * initial_dpi_factor) as i32
+    );
 
     // Build a simple quad rendering vao
     let quad_vao = setup_quad(&gl);

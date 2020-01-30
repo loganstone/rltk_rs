@@ -7,7 +7,7 @@
 // Comments that duplicate previous examples have been removed for brevity.
 //////////////////////////////////////////////////////////////
 
-use rltk::{Algorithm2D, BaseMap, Console, DijkstraMap, DistanceAlg, GameState, Point, Rltk, RGB};
+use rltk::prelude::*;
 rltk::add_wasm_support!();
 
 extern crate rand;
@@ -45,7 +45,7 @@ impl State {
                 visible: vec![false; 80 * 50],
                 revealed: vec![false; 80 * 50],
             },
-            player_position: (40*80)+25, // Equivalent to point2d_to_index
+            player_position: (40 * 80) + 25, // Equivalent to point2d_to_index
             search_targets: Vec::with_capacity(80 * 50),
             // Here we create an empty placeholder for the flow map; this way we don't allocate it repeatedly
             flow_map: DijkstraMap::new_empty(80, 50, 2048.0),
@@ -284,7 +284,9 @@ impl Algorithm2D for Map {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "RLTK Example 05 - Dijstra Flow Maps", "resources");
+    let context = RltkBuilder::simple80x50()
+        .with_title("RLTK Example 5 - Dijkstra")
+        .build();
     let gs = State::new();
     rltk::main_loop(context, gs);
 }
